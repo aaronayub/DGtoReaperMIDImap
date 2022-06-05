@@ -1,0 +1,35 @@
+#!/bin/bash
+# A shell script which converts a Drumgizmo MIDImap file into a Reaper "MIDINoteNames" file.
+# This script requires that the "map" tags in the Drumgizmo MIDImap input start and end on the same line.
+
+# Validate the input
+if [ $# -lt 1 ]; then
+    echo "You need to provide an XML file containing a DrumGizmo MIDImap to use this tool."
+    exit 1
+fi
+if [[ $1 != *".xml" ]]; then
+    echo "The file provided is not an XML file. Please provide a DrumGizmo MIDImap file."
+    exit 1
+fi
+
+# Choose the output file name, and create it.
+if [[ $2 ]]; then
+    output=$2
+else
+    output="${1%.*}".txt
+fi
+[ -f $output ] && echo "$output" already exists: overwriting file.
+echo "# MIDI note name map." > $output
+
+while read -r line; do
+    # Only read the map tags between the midimap tag
+    [[ ! $started && $line == *"<midimap>"* ]] && started=1
+    [[ $line == *"</midimap>"* ]] && break
+    [[ $started ]] || continue
+    [[ $line == *"<midimap>"* ]] && continue
+
+    # Write the note and the instrument tags to the output file
+    note=`echo $line | xmllint --xpath 'string(/map/@note)' -`
+    instr=`echo $line | xmllint --xpath 'string(/map/@instr)' -`
+    echo "$note" "$instr" >> $output
+done < $1
