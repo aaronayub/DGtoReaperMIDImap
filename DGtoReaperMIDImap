@@ -1,6 +1,22 @@
-#!/bin/bash
-# A shell script which converts a Drumgizmo MIDImap file into a Reaper "MIDINoteNames" file.
+#!/bin/sh
+# A script which converts a Drumgizmo MIDImap file into a Reaper "MIDINoteNames" file.
 # This script requires that the "map" tags in the Drumgizmo MIDImap input start and end on the same line.
+
+# Prints the help menu
+help() {
+    echo -e "Converts a Drumgizmo MIDImap file into a Reaper MIDI note names file.
+usage: DGtoReaperMIDImap {file} [optional output filename]"
+    exit 0
+}
+
+# Parse arguments
+while getopts ":h" arg; do
+    case "$arg" in
+        h)
+            help
+            ;;
+    esac
+done
 
 # Validate the input
 if [ $# -lt 1 ]; then
@@ -23,10 +39,9 @@ echo "# MIDI note name map." > $output
 
 while read -r line; do
     # Only read the map tags between the midimap tag
-    [[ ! $started && $line == *"<midimap>"* ]] && started=1
     [[ $line == *"</midimap>"* ]] && break
+    [[ ! $started && $line == *"<midimap>"* ]] && started=1 && continue
     [[ $started ]] || continue
-    [[ $line == *"<midimap>"* ]] && continue
 
     # Write the note and the instrument tags to the output file
     note=`echo $line | xmllint --xpath 'string(/map/@note)' -`
