@@ -44,7 +44,7 @@ while read -r line; do
     [[ $started ]] || continue
 
     # Write the note and the instrument tags to the output file
-    note=`echo $line | xmllint --xpath 'string(/map/@note)' -`
-    instr=`echo $line | xmllint --xpath 'string(/map/@instr)' -`
+    note=$(echo $line | xmllint --xpath 'string(/map/@note)' -)
+    instr=$(echo $line | xmllint --xpath 'string(/map/@instr)' -)
     echo "$note" "$instr" >> $output
 done < $1
